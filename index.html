@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with Google Gemini</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .chat-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .messages { max-height: 400px; overflow-y: scroll; margin-bottom: 10px; }
+    .message { padding: 10px; margin: 5px 0; border-radius: 5px; }
+    .user { background-color: #d9fdd3; }
+    .gemini { background-color: #f1f1f1; }
+    input[type="text"] { width: 80%; padding: 10px; }
+    button { padding: 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <input type="text" id="userInput" placeholder="Ask me anything..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Get references to the DOM elements
+    const messagesDiv = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+
+    // Function to display a message in the chat
+    function displayMessage(content, sender) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message', sender);
+      messageElement.textContent = content;
+      messagesDiv.appendChild(messageElement);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+    }
+
+    // Send user input to the backend
+    function sendMessage() {
+      const message = userInput.value.trim();
+      if (message) {
+        displayMessage(message, 'user');
+        userInput.value = ''; // Clear the input field
+
+        // Emit user message to the backend
+        socket.emit('userMessage', message);
+      }
+    }
+
+    // Listen for the Gemini response from the backend
+    socket.on('geminiResponse', (response) => {
+      if (response) {
+        displayMessage(response, 'gemini');
+      } else {
+        displayMessage('Sorry, I couldn\'t understand that.', 'gemini');
+      }
+    });
+  </script>
+
+</body>
+</html>
